@@ -1,0 +1,123 @@
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from typing import List, Optional
+from .database import SessionLocal, init_db
+from . import models, schemas
+from .config import settings
+from .llm import generate_questions
+from sqlalchemy import func
+
+app = FastAPI(title="Interview Prep Platform", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",")],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
+
+@app.post("/api/questions/generate", response_model=schemas.GenerateResponse)
+def api_generate(req: schemas.GenerateRequest):
+    questions = generate_questions(req.job_title)
+    return {"questions": questions}
+
+@app.post("/api/questions", response_model=schemas.QASetOut)
+def create_set(payload: schemas.QASetCreate, db: Session = Depends(get_db)):
+    qa_set = models.QASet(job_title=payload.job_title, name=payload.name)
+    db.add(qa_set)
+    db.flush()  # to get set id
+
+    for q in payload.questions:
+        qtype = models.QuestionType(q.type)
+        db.add(models.Question(set_id=qa_set.id, type=qtype, text=q.question))
+
+    db.commit()
+    db.refresh(qa_set)
+    return qa_set
+
+@app.get("/api/questions", response_model=List[schemas.QuestionOut])
+def list_questions(set_id: Optional[int] = None, db: Session = Depends(get_db)):
+    query = db.query(models.Question)
+    if set_id is not None:
+        query = query.filter(models.Question.set_id == set_id)
+    return query.order_by(models.Question.created_at.desc()).all()
+
+@app.delete("/api/questions/{qid}")
+def delete_question(qid: int, db: Session = Depends(get_db)):
+    q = db.get(models.Question, qid)
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    db.delete(q)
+    db.commit()
+    return {"ok": True}
+
+@app.patch("/api/questions/{qid}", response_model=schemas.QuestionOut)
+def update_question(qid: int, payload: schemas.QuestionPatch, db: Session = Depends(get_db)):
+    q = db.get(models.Question, qid)
+    if not q:
+        raise HTTPException(status_code=404, detail="Question not found")
+    if payload.user_answer is not None:
+        q.user_answer = payload.user_answer
+    if payload.difficulty is not None:
+        if not (1.0 <= payload.difficulty <= 5.0):
+            raise HTTPException(status_code=400, detail="Difficulty must be between 1 and 5")
+        q.difficulty = payload.difficulty
+    if payload.flagged is not None:
+        q.flagged = payload.flagged
+    db.commit()
+    db.refresh(q)
+    return q
+
+@app.get("/api/stats")
+def stats(db: Session = Depends(get_db)):
+    total_sets = db.query(models.QASet).count()
+    total_questions = db.query(models.Question).count()
+    flagged = db.query(models.Question).filter(models.Question.flagged.is_(True)).count()
+    avg_diff = db.query(func.avg(models.Question.difficulty)).scalar()
+    return {
+        "total_sets": total_sets,
+        "total_questions": total_questions,
+        "flagged_questions": flagged,
+        "avg_difficulty": float(avg_diff) if avg_diff is not None else None,
+    }
+
+@app.get("/api/questions/page")
+def list_questions_paged(
+    page: int = 1,
+    page_size: int = 10,
+    set_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
+    if page < 1 or page_size < 1 or page_size > 100:
+        raise HTTPException(status_code=400, detail="Invalid pagination parameters")
+    query = db.query(models.Question)
+    if set_id is not None:
+        query = query.filter(models.Question.set_id == set_id)
+    total = query.count()
+    items = (
+        query.order_by(models.Question.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return {
+        "items": [schemas.QuestionOut.model_validate(i) for i in items],
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "pages": (total + page_size - 1) // page_size,
+    }

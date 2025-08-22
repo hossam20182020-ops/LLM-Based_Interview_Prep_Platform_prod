@@ -1,42 +1,63 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Literal
 
+
+# ---------- Questions ----------
 class QuestionCreate(BaseModel):
+    # Accept either {"text": "..."} (alias) or {"question": "..."} (field name)
+    model_config = ConfigDict(populate_by_name=True)
     type: Literal["technical", "behavioral"]
     question: str = Field(..., alias="text")
 
+
 class QuestionOut(BaseModel):
+    # ORM mode so model_validate() works with SQLAlchemy rows
+    model_config = ConfigDict(from_attributes=True)
     id: int
     set_id: int
     type: str
     text: str
     user_answer: Optional[str] = None
-    difficulty: Optional[float] = None
-    flagged: bool
+    difficulty: Optional[float] = Field(None, ge=1, le=5)
+    flagged: bool = False
 
-    class Config:
-        from_attributes = True
 
+class QuestionPatch(BaseModel):
+    user_answer: Optional[str] = None
+    difficulty: Optional[float] = Field(None, ge=1, le=5)
+    flagged: Optional[bool] = None
+
+
+# ---------- Sets ----------
 class QASetCreate(BaseModel):
     job_title: str
     name: Optional[str] = None
     questions: List[QuestionCreate]
 
+
 class QASetOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     job_title: str
     name: Optional[str] = None
 
-    class Config:
-        from_attributes = True
 
+# ---------- Generation ----------
 class GenerateRequest(BaseModel):
     job_title: str
+
 
 class GenerateResponse(BaseModel):
     questions: List[QuestionCreate]
 
-class QuestionPatch(BaseModel):
-    user_answer: Optional[str] = None
-    difficulty: Optional[float] = None
-    flagged: Optional[bool] = None
+
+# ---------- Pagination & Errors ----------
+class QuestionsPage(BaseModel):
+    items: List[QuestionOut]
+    total: int
+    page: int
+    size: int
+
+
+class ErrorResponse(BaseModel):
+    detail: str

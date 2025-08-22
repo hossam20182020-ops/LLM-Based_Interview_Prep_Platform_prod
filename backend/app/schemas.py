@@ -57,6 +57,7 @@ class QuestionsPage(BaseModel):
     total: int
     page: int
     size: int
+    pages: int  # Add this field for frontend compatibility
 
 
 class ErrorResponse(BaseModel):

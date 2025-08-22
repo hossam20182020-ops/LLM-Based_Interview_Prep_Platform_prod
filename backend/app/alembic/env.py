@@ -1,9 +1,16 @@
 from logging.config import fileConfig
+import sys
+import os
+from pathlib import Path
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy.orm import declarative_base
 
 from alembic import context
+
+# Add current directory to Python path to handle imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/../..')
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,20 +21,31 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-from app import models  
-target_metadata = models.Base.metadata
+# Import all the models so they're registered with Base.metadata
+target_metadata = None
+try:
+    # Import the database module to get the Base
+    from database import Base
+    
+    # Import all model modules to register them with Base.metadata
+    import models
+    
+    # Now Base.metadata should have all the tables
+    target_metadata = Base.metadata
+    print(f"Successfully loaded metadata with {len(target_metadata.tables)} tables")
+    
+except Exception as e:
+    print(f"Error importing models: {e}")
+    # Create a fallback Base if import fails
+    Base = declarative_base()
+    target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
-#Read DATABASE_URL from env and inject into Alembic config
-import os
+# Read DATABASE_URL from env and inject into Alembic config
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     config.set_main_option("sqlalchemy.url", DATABASE_URL)

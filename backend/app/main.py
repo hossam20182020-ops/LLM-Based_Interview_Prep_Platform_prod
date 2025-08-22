@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from .database import SessionLocal, init_db
-from . import models, schemas
-from .config import settings
-from .llm import generate_questions
+from database import SessionLocal, init_db
+import models, schemas
+from config import settings
+from llm import generate_questions
 from sqlalchemy import func, text
 
 app = FastAPI(title="Interview Prep Platform", version="1.0.0")
@@ -67,12 +67,13 @@ def list_questions(
 ):
     """
     Paginated list of questions with optional set_id filter.
-    Returns: { items, total, page, size }
+    Returns: { items, total, page, size, pages }
     """
     query = db.query(models.Question)
     if set_id is not None:
         query = query.filter(models.Question.set_id == set_id)
     total = query.count()
+    pages = (total + size - 1) // size  # Calculate total pages
     rows = (
         query.order_by(models.Question.created_at.desc())
         .offset((page - 1) * size)
@@ -80,7 +81,7 @@ def list_questions(
         .all()
     )
     items = [schemas.QuestionOut.model_validate(r) for r in rows]
-    return {"items": items, "total": total, "page": page, "size": size}
+    return {"items": items, "total": total, "page": page, "size": size, "pages": pages}
 
 
 @app.delete("/api/questions/{qid}", responses={404: {"model": schemas.ErrorResponse}})

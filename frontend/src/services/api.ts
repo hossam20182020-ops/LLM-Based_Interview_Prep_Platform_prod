@@ -56,9 +56,12 @@ export async function getStats() {
 }
 
 export async function listQuestionsPaged(page:number=1, pageSize:number=10, setId?: number) {
-  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  const params = new URLSearchParams({ 
+    page: String(page), 
+    size: String(pageSize)  // Changed from page_size to size
+  });
   if (setId !== undefined) params.set('set_id', String(setId));
-  const res = await fetch(`${BASE}/api/questions/page?${params.toString()}`);
+  const res = await fetch(`${BASE}/api/questions?${params.toString()}`); // Removed /page
   if (!res.ok) throw new Error('Failed to fetch paged');
   return res.json();
 }

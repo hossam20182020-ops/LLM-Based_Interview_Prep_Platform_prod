@@ -75,7 +75,7 @@ def list_questions(
     total = query.count()
     pages = (total + size - 1) // size  # Calculate total pages
     rows = (
-        query.order_by(models.Question.created_at.desc())
+        query.order_by(models.Question.id.desc())
         .offset((page - 1) * size)
         .limit(size)
         .all()

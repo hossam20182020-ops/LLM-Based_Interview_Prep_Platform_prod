@@ -55,13 +55,16 @@ export async function getStats() {
   return res.json();
 }
 
-export async function listQuestionsPaged(page:number=1, pageSize:number=10, setId?: number) {
+// Fixed: Use the correct endpoint and parameter names
+export async function listQuestionsPaged(page: number = 1, pageSize: number = 10, setId?: number) {
   const params = new URLSearchParams({ 
     page: String(page), 
-    size: String(pageSize)  // Changed from page_size to size
+    size: String(pageSize)  // Backend expects 'size', not 'page_size'
   });
   if (setId !== undefined) params.set('set_id', String(setId));
-  const res = await fetch(`${BASE}/api/questions?${params.toString()}`); // Removed /page
+  
+  // Use the correct endpoint (no /page suffix)
+  const res = await fetch(`${BASE}/api/questions?${params.toString()}`);
   if (!res.ok) throw new Error('Failed to fetch paged');
   return res.json();
 }

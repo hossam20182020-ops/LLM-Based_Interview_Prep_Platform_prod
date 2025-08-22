@@ -1,6 +1,6 @@
 from .config import settings
 from typing import List, Dict
-import json
+import json , time , random
 
 # Using Google AI Studio (Gemini) via google-generativeai
 # If key is not provided, we return a simple fallback.

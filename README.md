@@ -21,10 +21,10 @@ A full-stack app to generate, save, and organize interview questions, rate their
    docker compose up --build
    ```
 4. **Open the app:**  
-   - Frontend: http://localhost:3000  
+   - Frontend: http://localhost:3001
    - Backend docs: http://localhost:8000/docs
 
-> If you see CORS errors, ensure `CORS_ORIGINS` in the backend container includes `http://localhost:3000`.
+> If you see CORS errors, ensure `CORS_ORIGINS` in the backend container includes `http://localhost:3001`.
 
 ## How It Works
 
@@ -105,4 +105,13 @@ Basic responsive layout via `src/styles.css`, adaptive grid on ≥720px, card co
 
 ### CI/CD
 GitHub Actions workflow at `.github/workflows/ci.yml` runs backend tests + frontend build/tests on each push/PR.
+
+
+
+## Production notes
+
+- Create your `.env` from `.env.example` and **never commit** secrets.
+- DB schema is managed by **Alembic**; the backend container runs `alembic upgrade head` on startup.
+- Frontend is served by nginx with SPA history fallback.
+- Backend CORS default is `http://localhost:3001` (set via `CORS_ORIGINS`).
 

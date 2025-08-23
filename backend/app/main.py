@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from database import SessionLocal, init_db
-import models, schemas
-from config import settings
-from llm import generate_questions
+from app.database import SessionLocal, init_db
+from app import models, schemas
+from app.config import settings
+from app.llm import generate_questions
 from sqlalchemy import func, text
 
 app = FastAPI(title="Interview Prep Platform", version="1.0.0")
@@ -139,3 +139,17 @@ def healthz(db: Session = Depends(get_db)):
     # quick DB ping (portable)
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
+
+
+@app.get("/api/questions/page", response_model=schemas.QuestionsPage, responses={404: {"model": schemas.ErrorResponse}})
+def list_questions_legacy(
+    set_id: Optional[int] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    result = list_questions(set_id=set_id, page=page, size=page_size, db=db)
+    # include page_size for backward-compat
+    result_dict = result if isinstance(result, dict) else result.model_dump()
+    result_dict["page_size"] = result_dict.get("size")
+    return result_dict

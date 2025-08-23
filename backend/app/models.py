@@ -3,7 +3,7 @@ from sqlalchemy import (
     Index, CheckConstraint, func
 )
 from sqlalchemy.orm import relationship
-from database import Base
+from app.database import Base
 import sqlalchemy as sa  # <-- add this
 import enum
 

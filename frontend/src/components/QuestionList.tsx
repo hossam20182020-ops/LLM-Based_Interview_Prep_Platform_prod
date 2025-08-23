@@ -82,8 +82,8 @@ export default function QuestionList() {
   }
 
   return (
-    <div className='card'>
-      <h2>Saved Questions</h2>
+    <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <h2 className="text-lg font-semibold">Saved Questions</h2>
       
       {loading ? <p>Loading...</p> : (
         items.length === 0 ? <p>No questions yet.</p> : (
@@ -94,7 +94,7 @@ export default function QuestionList() {
                   <div style={{ flex: 1 }}>
                     <strong>#{q.id} {q.type}:</strong> {q.text}
                   </div>
-                  <button
+                  <button className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm hover:bg-black hover:text-white transition disabled:opacity-50"
                     onClick={() => handleDelete(q)}
                     disabled={deleting === q.id}
                     style={{
@@ -144,14 +144,14 @@ export default function QuestionList() {
         )
       )}
       
-      <div className='pagination' style={{ marginTop: 16 }}>
-        <button disabled={page <= 1 || loading} onClick={() => refresh(page - 1, pageSize)}>
+      <div className="mt-3 flex items-center justify-between gap-3 flex-wrap" style={{ marginTop: 16 }}>
+        <button className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm hover:bg-black hover:text-white transition disabled:opacity-50" disabled={page <= 1 || loading} onClick={() => refresh(page - 1, pageSize)}>
           Previous
         </button>
         <span style={{ margin: '0 16px' }}>
           Page {page} of {pages} ({total} total questions)
         </span>
-        <button disabled={page >= pages || loading} onClick={() => refresh(page + 1, pageSize)}>
+        <button className="inline-flex items-center justify-center rounded-lg border px-3 py-1.5 text-sm hover:bg-black hover:text-white transition disabled:opacity-50" disabled={page >= pages || loading} onClick={() => refresh(page + 1, pageSize)}>
           Next
         </button>
         <label style={{ marginLeft: 16 }}>

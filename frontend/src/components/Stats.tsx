@@ -7,11 +7,11 @@ export default function Stats() {
     getStats().then(setStats).catch(()=>{})
   },[])
 
-  if (!stats) return <div className='card'><h2>Stats</h2><p>Loading...</p></div>
+  if (!stats) return <div className="rounded-2xl border bg-white p-4 shadow-sm"><h2 className="text-lg font-semibold">Stats</h2><p>Loading...</p></div>
 
   return (
-    <div className='card'>
-      <h2>Stats</h2>
+    <div className="rounded-2xl border bg-white p-4 shadow-sm">
+      <h2 className="text-lg font-semibold">Stats</h2>
       <ul>
         <li>Total sets: {stats.total_sets}</li>
         <li>Total questions: {stats.total_questions}</li>

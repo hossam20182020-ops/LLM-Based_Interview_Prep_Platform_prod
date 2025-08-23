@@ -35,13 +35,43 @@ export default function GenerateForm({ onSaved }: Props) {
   }
 
   return (
-    <div className='card' style={{marginBottom:16}}>
-      <h2>Generate Questions</h2>
-      <div className='controls'>
-        <input value={job} onChange={e=>setJob(e.target.value)} placeholder="Job title" />
-        <input value={name} onChange={e=>setName(e.target.value)} placeholder="Set name (optional)" />
-        <button onClick={onGenerate} disabled={loading}>{loading ? 'Generating...' : 'Generate'}</button>
-        <button onClick={onSave} disabled={loading || qs.length===0}>Save as Set</button>
+    <div className="rounded-2xl border bg-white shadow-sm p-4">
+      <h2 className="text-lg font-semibold">Generate Questions</h2>
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+   <input
+  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 
+             placeholder-gray-400 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500"
+  value={job}
+  onChange={e => setJob(e.target.value)}
+  placeholder="Job title"
+/>
+
+<input
+  className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 
+             placeholder-gray-400 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500"
+  value={name}
+  onChange={e => setName(e.target.value)}
+  placeholder="Set name (optional)"
+/>
+
+<button
+  className="inline-flex items-center justify-center rounded-xl bg-green-400 px-4 py-2 font-medium 
+             text-white hover:bg-green-500 transition disabled:opacity-50"
+  onClick={onGenerate}
+  disabled={loading}
+>
+  {loading ? 'Generating...' : 'Generate'}
+</button>
+
+<button
+  className="inline-flex items-center justify-center rounded-xl bg-green-400 px-4 py-2 font-medium 
+             text-white hover:bg-green-500 transition disabled:opacity-50"
+  onClick={onSave}
+  disabled={loading || qs.length === 0}
+>
+  Save as Set
+</button>
+
       </div>
       {qs.length>0 && (
         <ol>

@@ -4,7 +4,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
-import sqlalchemy as sa  # <-- add this
+import sqlalchemy as sa
 import enum
 
 
@@ -17,7 +17,7 @@ class QASet(Base):
     __tablename__ = "qa_sets"
 
     id = Column(Integer, primary_key=True)  # PK is already indexed implicitly
-    job_title = Column(String(200), nullable=False, index=True)
+    job_title = Column(String(50), nullable=False, index=True)
     name = Column(String(200), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 

@@ -30,7 +30,7 @@ class QuestionPatch(BaseModel):
 
 # ---------- Sets ----------
 class QASetCreate(BaseModel):
-    job_title: str
+    job_title: str = Field(..., min_length=1, max_length=50, description="Job title (max 50 characters)")
     name: Optional[str] = None
     questions: List[QuestionCreate]
 
@@ -38,13 +38,13 @@ class QASetCreate(BaseModel):
 class QASetOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    job_title: str
+    job_title: str = Field(..., min_length=1, max_length=50, description="Job title (max 50 characters)")
     name: Optional[str] = None
 
 
 # ---------- Generation ----------
 class GenerateRequest(BaseModel):
-    job_title: str
+    job_title: str = Field(..., min_length=1, max_length=50, description="Job title (max 50 characters)")
 
 
 class GenerateResponse(BaseModel):

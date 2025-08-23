@@ -14,7 +14,7 @@ def upgrade():
         CREATE TABLE IF NOT EXISTS qa_sets (
             id SERIAL PRIMARY KEY,
             name VARCHAR(200),
-            job_title VARCHAR(200) NOT NULL,
+            job_title VARCHAR(50) NOT NULL,
             created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL
         )
     """)

@@ -35,23 +35,44 @@ def on_startup():
 
 @app.post("/api/questions/generate", response_model=schemas.GenerateResponse)
 def api_generate(req: schemas.GenerateRequest):
-    questions = generate_questions(req.job_title)
-    return {"questions": questions}
+    # Additional validation (Pydantic already validates, but let's be explicit)
+    if len(req.job_title.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Job title cannot be empty")
+    if len(req.job_title) > 50:
+        raise HTTPException(status_code=400, detail="Job title must be 50 characters or less")
+    
+    try:
+        questions = generate_questions(req.job_title)
+        return {"questions": questions}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Failed to generate questions")
 
 
 @app.post("/api/questions", response_model=schemas.QASetOut, status_code=201)
 def create_set(payload: schemas.QASetCreate, db: Session = Depends(get_db)):
-    qa_set = models.QASet(job_title=payload.job_title, name=payload.name)
-    db.add(qa_set)
-    db.flush()  # to get set id
+    # Additional validation
+    if len(payload.job_title.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Job title cannot be empty")
+    if len(payload.job_title) > 50:
+        raise HTTPException(status_code=400, detail="Job title must be 50 characters or less")
 
-    for q in payload.questions:
-        qtype = models.QuestionType(q.type)
-        db.add(models.Question(set_id=qa_set.id, type=qtype, text=q.question))
+    try:
+        qa_set = models.QASet(job_title=payload.job_title, name=payload.name)
+        db.add(qa_set)
+        db.flush()  # to get set id
 
-    db.commit()
-    db.refresh(qa_set)
-    return qa_set
+        for q in payload.questions:
+            qtype = models.QuestionType(q.type)
+            db.add(models.Question(set_id=qa_set.id, type=qtype, text=q.question))
+
+        db.commit()
+        db.refresh(qa_set)
+        return qa_set
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create question set")
 
 
 @app.get(

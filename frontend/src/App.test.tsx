@@ -4,8 +4,10 @@ import { render } from '@testing-library/react'
 import App from './App'
 
 describe('App', () => {
-  it('renders title', () => {
+  it('renders title and tagline', () => {
     const { getByText } = render(<App />)
-    expect(getByText(/LLM Interview Prep/i)).toBeTruthy()
+    expect(getByText(/AI-Powered Interview Preparation/i)).toBeTruthy()
+    // Tagline added below the title
+    expect(getByText(/Generate realistic interview questions/i)).toBeTruthy()
   })
 })

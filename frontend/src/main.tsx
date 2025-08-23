@@ -5,6 +5,8 @@ import './styles.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <div className="page-bg-image min-h-screen">
+      <App />
+    </div>
   </React.StrictMode>
 )

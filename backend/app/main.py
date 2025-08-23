@@ -130,7 +130,7 @@ def stats(db: Session = Depends(get_db)):
         "total_sets": total_sets,
         "total_questions": total_questions,
         "flagged_questions": flagged,
-        "avg_difficulty": float(avg_diff) if avg_diff is not None else None,
+        "avg_difficulty": round(avg_diff,2) if avg_diff is not None else None,
     }
 
 

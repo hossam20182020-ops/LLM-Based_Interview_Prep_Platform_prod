@@ -2,29 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* App globals */
-:root { color-scheme: light dark; }
-html { -webkit-text-size-adjust: 100%; }
 
-/* --- App background utilities --- */
-.app-bg {
-  background:
-    radial-gradient(1200px 800px at 80% -20%, rgba(16,185,129,0.12), transparent 60%),
-    radial-gradient(900px 600px at -10% 20%, rgba(59,130,246,0.10), transparent 55%),
-    linear-gradient(180deg, #fafafa, #ffffff 40%, #fafafa 100%);
-  position: relative;
-}
-
-/* faint grid overlay */
-.app-bg::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
+/* Real-image background (faded) */
+.page-bg-image{
+  min-height: 100vh;
   background-image:
-    linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px);
-  background-size: 24px 24px, 24px 24px;
-  mask-image: radial-gradient(ellipse at center, black, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 70%);
+    linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)),
+    url('/llm-interview-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
+@media (prefers-color-scheme: dark){
+  .page-bg-image{
+    background-image:
+      linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+      url('/llm-interview-bg.png');
+  }
+}
+
+/* Primitives */
+.input-green { @apply w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500; }
+.btn-primary { @apply inline-flex items-center justify-center rounded-xl bg-green-400 px-4 py-2 font-medium text-white hover:bg-green-500 transition disabled:opacity-50; }
+.btn-subtle { @apply inline-flex items-center justify-center rounded-xl border px-3 py-2 text-neutral-700 hover:bg-neutral-50; }
+.btn-danger { @apply inline-flex items-center justify-center rounded-xl bg-rose-500/90 px-3 py-2 text-white hover:bg-rose-600 transition; }
+
+.card      { @apply rounded-2xl border bg-white/90 shadow-sm; }
+.card-head { @apply px-5 py-4 border-b flex items-center justify-between; }
+.card-body { @apply p-5; }

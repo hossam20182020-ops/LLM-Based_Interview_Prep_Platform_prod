@@ -29,13 +29,33 @@ export default function QuestionList() {
   }, [])
 
   const setFlag = async (q: QuestionOut, v: boolean) => {
-    await updateQuestion(q.id, { flagged: v })
-    refresh()
+    try {
+      await updateQuestion(q.id, { flagged: v })
+      // Update the local state instead of refreshing
+      setItems(prevItems => 
+        prevItems.map(item => 
+          item.id === q.id ? { ...item, flagged: v } : item
+        )
+      )
+    } catch (error) {
+      console.error('Failed to update flag:', error)
+      alert('Failed to update flag. Please try again.')
+    }
   }
 
   const setDiff = async (q: QuestionOut, v: number) => {
-    await updateQuestion(q.id, { difficulty: v })
-    refresh()
+    try {
+      await updateQuestion(q.id, { difficulty: v })
+      // Update the local state instead of refreshing
+      setItems(prevItems => 
+        prevItems.map(item => 
+          item.id === q.id ? { ...item, difficulty: v } : item
+        )
+      )
+    } catch (error) {
+      console.error('Failed to update difficulty:', error)
+      alert('Failed to update difficulty. Please try again.')
+    }
   }
 
   const handleDelete = async (q: QuestionOut) => {

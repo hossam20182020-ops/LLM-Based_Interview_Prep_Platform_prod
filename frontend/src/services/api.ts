@@ -32,13 +32,6 @@ export async function saveSet(jobTitle: string, questions: GeneratedQuestion[], 
   return res.json();
 }
 
-export async function listQuestions(setId?: number): Promise<QuestionOut[]> {
-  const url = setId ? `${BASE}/api/questions?set_id=${setId}` : `${BASE}/api/questions`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch');
-  return res.json();
-}
-
 export async function updateQuestion(qid: number, payload: Partial<{user_answer: string; difficulty: number; flagged: boolean;}>) {
   const res = await fetch(`${BASE}/api/questions/${qid}`, {
     method: 'PATCH',
@@ -49,21 +42,30 @@ export async function updateQuestion(qid: number, payload: Partial<{user_answer:
   return res.json();
 }
 
+// Delete a single question
+export async function deleteQuestion(qid: number): Promise<void> {
+  const res = await fetch(`${BASE}/api/questions/${qid}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to delete question');
+  }
+}
+
 export async function getStats() {
   const res = await fetch(`${BASE}/api/stats`);
   if (!res.ok) throw new Error('Failed to load stats');
   return res.json();
 }
 
-// Fixed: Use the correct endpoint and parameter names
 export async function listQuestionsPaged(page: number = 1, pageSize: number = 10, setId?: number) {
   const params = new URLSearchParams({ 
     page: String(page), 
-    size: String(pageSize)  // Backend expects 'size', not 'page_size'
+    size: String(pageSize)
   });
   if (setId !== undefined) params.set('set_id', String(setId));
   
-  // Use the correct endpoint (no /page suffix)
   const res = await fetch(`${BASE}/api/questions?${params.toString()}`);
   if (!res.ok) throw new Error('Failed to fetch paged');
   return res.json();

@@ -9,9 +9,65 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial
 @media (min-width: 720px) {
   .grid-2 { grid-template-columns: 2fr 1fr; }
 }
-button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
-input, select { padding: 8px; border-radius: 8px; border: 1px solid #ccc; }
-.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.list { list-style: none; padding: 0; margin: 0; }
-.list li { padding: 10px 0; border-bottom: 1px dashed #eee; }
-.pagination { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+button { 
+  padding: 8px 12px; 
+  border-radius: 8px; 
+  border: 1px solid #ccc; 
+  cursor: pointer;
+  background: #fff;
+  transition: background-color 0.2s ease;
+}
+
+button:hover:not(:disabled) { 
+  background: #f8f9fa; 
+}
+
+button:disabled { 
+  opacity: 0.6; 
+  cursor: not-allowed; 
+}
+
+/* Delete button specific styles */
+button[style*="background-color: #dc3545"]:hover:not(:disabled) {
+  background-color: #c82333 !important;
+}
+
+input, select { 
+  padding: 8px; 
+  border-radius: 8px; 
+  border: 1px solid #ccc; 
+}
+
+.controls { 
+  display: flex; 
+  gap: 8px; 
+  flex-wrap: wrap; 
+  align-items: center; 
+}
+
+.list { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
+}
+
+.pagination { 
+  display: flex; 
+  gap: 8px; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  justify-content: center;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 720px) {
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .pagination span {
+    order: -1;
+  }
+}

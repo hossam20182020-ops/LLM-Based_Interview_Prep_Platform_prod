@@ -43,6 +43,7 @@ def upgrade():
         )
     """)
 
+
     # Create indexes if they don't exist
     op.execute("""
         CREATE INDEX IF NOT EXISTS ix_questions_set_created_at ON questions (set_id, created_at)

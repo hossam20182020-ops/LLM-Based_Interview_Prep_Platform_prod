@@ -2,39 +2,183 @@ name: CI
 
 on:
   push:
+    branches: [ main, develop ]
   pull_request:
+    branches: [ main, develop ]
 
 jobs:
   backend:
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install deps
+          cache: 'pip'
+          
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements-dev.txt
-      - name: Run tests
+          
+      - name: Set environment variables
+        run: |
+          echo "DATABASE_URL=sqlite+pysqlite:///:memory:" >> $GITHUB_ENV
+          echo "CORS_ORIGINS=http://testserver" >> $GITHUB_ENV
+          
+      - name: Run linting (optional)
         working-directory: backend
-        run: pytest -q --cov=app --cov-report=term-missing
+        run: |
+          # Add linting if you have it configured
+          # ruff check . || true
+          echo "Linting step (add ruff/black if desired)"
+          
+      - name: Run tests with coverage
+        working-directory: backend
+        run: |
+          pytest -v --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80
+          
+      - name: Upload coverage to Codecov (optional)
+        uses: codecov/codecov-action@v3
+        if: success()
+        with:
+          file: backend/coverage.xml
+          flags: backend
+          name: backend-coverage
 
   frontend:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      - name: Install
+          
+      - name: Install dependencies
         working-directory: frontend
         run: npm ci
-      - name: Build
+        
+      - name: Run linting (optional)
+        working-directory: frontend
+        run: |
+          # Add if you have ESLint configured
+          # npm run lint || true
+          echo "Linting step (add ESLint if desired)"
+          
+      - name: Run tests
+        working-directory: frontend
+        run: npm test -- --reporter=verbose
+        
+      - name: Build application
         working-directory: frontend
         run: npm run build
-      - name: Test
+        env:
+          VITE_API_BASE_URL: http://localhost:8000
+          
+      - name: Check build artifacts
         working-directory: frontend
-        run: npm test
+        run: |
+          ls -la dist/
+          test -f dist/index.html
+
+  # Optional: End-to-end integration test
+  integration:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Create test environment file
+        run: |
+          cat > .env << EOF
+          POSTGRES_USER=test_user
+          POSTGRES_PASSWORD=test_password
+          POSTGRES_DB=test_db
+          DATABASE_URL=postgresql+psycopg2://test_user:test_password@db:5432/test_db
+          GEMINI_API_KEY=
+          VITE_API_BASE_URL=http://localhost:8001
+          EOF
+          
+      - name: Start services with Docker Compose
+        run: |
+          docker compose up -d --build
+          
+      - name: Wait for services to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8001/healthz; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3001; do sleep 2; done'
+          
+      - name: Run basic integration tests
+        run: |
+          # Test backend API
+          curl -f http://localhost:8001/healthz
+          curl -f http://localhost:8001/api/stats
+          
+          # Test question generation (fallback mode)
+          curl -X POST http://localhost:8001/api/questions/generate \
+            -H "Content-Type: application/json" \
+            -d '{"job_title": "Test Engineer"}' \
+            | jq '.questions | length' | grep -q '[1-9]'
+            
+          # Test frontend is serving
+          curl -f http://localhost:3001 | grep -q "AI-Powered Interview Preparation"
+          
+      - name: Clean up
+        if: always()
+        run: |
+          docker compose down -v
+          docker system prune -f
+
+  # Security scan (optional)
+  security:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'

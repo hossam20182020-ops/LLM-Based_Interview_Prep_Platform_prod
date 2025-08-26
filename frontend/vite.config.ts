@@ -7,6 +7,20 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/setupTests.ts',
+    setupFiles: ['./src/setupTests.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/',
+        'src/test-setup.ts',
+        '**/*.d.ts',
+        '**/*.config.*',
+        'dist/'
+      ]
+    },
+    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    exclude: ['node_modules/', 'dist/', '.next/'],
   },
 })

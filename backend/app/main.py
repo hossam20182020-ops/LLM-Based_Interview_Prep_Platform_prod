@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
     # Startup logic
     init_db()
     yield
+    pass 
 
 app = FastAPI(title="Interview Prep Platform", version="1.0.0", lifespan=lifespan)
 
@@ -35,12 +36,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
-
 
 @app.post("/api/questions/generate", response_model=schemas.GenerateResponse)
 def api_generate(req: schemas.GenerateRequest):

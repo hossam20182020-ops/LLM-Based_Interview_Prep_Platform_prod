@@ -1,3 +1,5 @@
+
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -9,7 +11,14 @@ from app.config import settings
 from app.llm import generate_questions
 from sqlalchemy import func, text
 
-app = FastAPI(title="Interview Prep Platform", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    init_db()
+    yield
+
+app = FastAPI(title="Interview Prep Platform", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
